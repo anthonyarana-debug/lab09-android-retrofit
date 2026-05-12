@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -47,12 +48,18 @@ fun ProgPrincipal9() {
     val retrofit = Retrofit.Builder().baseUrl(urlBase)
         .addConverterFactory(GsonConverterFactory.create()).build()
     val servicio = retrofit.create(PostApiService::class.java)
+
+    val urlRecipes = "https://dummyjson.com/"
+    val retrofitRecipes = Retrofit.Builder().baseUrl(urlRecipes)
+        .addConverterFactory(GsonConverterFactory.create()).build()
+    val servicioRecipes = retrofitRecipes.create(RecipeApiService::class.java)
+
     val navController = rememberNavController()
 
     Scaffold(
         topBar = { BarraSuperior() },
         bottomBar = { BarraInferior(navController) },
-        content = { paddingValues -> Contenido(paddingValues, navController, servicio) }
+        content = { paddingValues -> Contenido(paddingValues, navController, servicio, servicioRecipes) }
     )
 }
 
@@ -90,6 +97,12 @@ fun BarraInferior(navController: NavHostController) {
             selected = navController.currentDestination?.route == "posts",
             onClick = { navController.navigate("posts") }
         )
+        NavigationBarItem(
+            icon = { Icon(Icons.Outlined.Star, contentDescription = "Recipes") },
+            label = { Text("Recipes") },
+            selected = navController.currentDestination?.route == "recipes",
+            onClick = { navController.navigate("recipes") }
+        )
     }
 }
 
@@ -97,7 +110,8 @@ fun BarraInferior(navController: NavHostController) {
 fun Contenido(
     pv: PaddingValues,
     navController: NavHostController,
-    servicio: PostApiService
+    servicio: PostApiService,
+    servicioRecipes: RecipeApiService
 ) {
     Box(
         modifier = Modifier
@@ -115,6 +129,13 @@ fun Contenido(
                 arguments = listOf(navArgument("id") { type = NavType.IntType })
             ) {
                 ScreenPost(navController, servicio, it.arguments!!.getInt("id"))
+            }
+            composable("recipes") { ScreenRecipes(navController, servicioRecipes) }
+            composable(
+                "recipeVer/{id}",
+                arguments = listOf(navArgument("id") { type = NavType.IntType })
+            ) {
+                ScreenRecipe(navController, servicioRecipes, it.arguments!!.getInt("id"))
             }
         }
     }
